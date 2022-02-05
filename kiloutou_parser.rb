@@ -3,6 +3,9 @@ require 'json'
 require 'ox'
 
 class KiloutouParser
+  PAGES_URL = "https://kiloutou.gestmax.fr/search/faceted/searchAction/all/field/vacsearchfront_localisation/value/all/page/"
+  KILOTOU_PAGE = "kiloutou.gestmax.fr"
+
   def generate_xml(path)
     doc = Ox::Document.new(:version => '1.0')
     jobs = get_jobs
@@ -27,7 +30,6 @@ class KiloutouParser
     jobs
   end
 
-
   def get_job(link)
     parameters = get_parameters(link)
     job = Ox::Element.new('job')
@@ -39,7 +41,7 @@ class KiloutouParser
 
   def get_parameters(link)
     page = @mechanize.get(link)
-    if link.split('/')[2] == "kiloutou.gestmax.fr"
+    if link.split('/')[2] == KILOTOU_PAGE
       get_kilotou_parameters(page, link)
     else
       get_canditates_parameters(page, link)
@@ -80,11 +82,11 @@ class KiloutouParser
 
   def get_links
     links = Array.new
-    page = @mechanize.get("https://kiloutou.gestmax.fr/search/faceted/searchAction/all/field/vacsearchfront_localisation/value/all/page/1")
+    page = @mechanize.get(PAGES_URL + "1")
     pages_count = page.at_xpath("//*[@class='pagination']").search("a")[-2].text.to_i
     links = links.concat(get_page_links(page))
     (2..pages_count).each do |page_number|
-      page = @mechanize.get("https://kiloutou.gestmax.fr/search/faceted/searchAction/all/field/vacsearchfront_localisation/value/all/page/#{page_number}")
+      page = @mechanize.get(PAGES_URL + page_number.to_s)
       links = links.concat(get_page_links(page))
     end
     links
